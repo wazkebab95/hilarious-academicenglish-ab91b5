@@ -664,7 +664,7 @@
                     <div class="w-10 h-10 rounded-xl accent-bg flex items-center justify-center text-base"><i class="fa-brands fa-whatsapp"></i></div>
                     <h3 class="font-serif text-xl font-bold">WhatsApp & Direct Message</h3>
                     <p class="text-xs opacity-70">Instant scheduling & quick inquiries</p>
-                    <a href="https://wa.me/" target="_blank" class="block text-xs font-semibold accent-text hover:underline">+44 (0) 700 892 4110</a>
+                    <p class="text-xs font-semibold accent-text">WhatsApp available upon request</p>
                 </div>
 
                 <div class="portfolio-card p-6 rounded-2xl space-y-3" style="transition-delay: 200ms;">
@@ -713,6 +713,15 @@
                         </div>
 
                         <button type="submit" class="w-full py-4 accent-bg text-xs uppercase tracking-[0.2em] font-bold transition shadow-xl rounded-xl">Send Inquiry to Fawwaz</button>
+                        <div class="space-y-1.5">
+                            <label for="captcha-input" class="block text-[10px] uppercase tracking-[0.2em] font-bold">Security Check: Type the Code Below</label>
+                            <div class="flex items-center gap-3">
+                                <canvas id="captcha-canvas" width="150" height="48" class="border border-current/25 rounded-xl select-none" aria-label="Security code image"></canvas>
+                                <button type="button" id="captcha-refresh" class="w-10 h-10 rounded-xl border border-current/25 opacity-70 hover:opacity-100 transition" aria-label="Show a new code"><i class="fa-solid fa-rotate-right"></i></button>
+                            </div>
+                            <input type="text" id="captcha-input" required autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="5" placeholder="Enter the 5-character code" class="w-full px-4 py-3 bg-transparent border border-current/25 text-xs focus:outline-none focus:border-current transition rounded-xl">
+                            <p id="captcha-error" class="hidden text-[11px] text-red-400">That code didn't match. Please try the new code.</p>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -919,6 +928,61 @@
         }, { threshold: 0.1 });
 
         document.querySelectorAll('.reveal-up').forEach(el => observer.observe(el));
+    </script>
+    <script>
+        // Typed-code security check for the contact form
+        (function () {
+            const form = document.getElementById('contact-form');
+            const canvas = document.getElementById('captcha-canvas');
+            const input = document.getElementById('captcha-input');
+            const error = document.getElementById('captcha-error');
+            const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+            let code = '';
+
+            function randomInt(max) {
+                return crypto.getRandomValues(new Uint32Array(1))[0] % max;
+            }
+
+            function drawCaptcha() {
+                code = Array.from({ length: 5 }, () => chars[randomInt(chars.length)]).join('');
+                const ctx = canvas.getContext('2d');
+                const color = getComputedStyle(canvas).color;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = color;
+                ctx.globalAlpha = 0.35;
+                for (let i = 0; i < 5; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(randomInt(canvas.width), randomInt(canvas.height));
+                    ctx.lineTo(randomInt(canvas.width), randomInt(canvas.height));
+                    ctx.stroke();
+                }
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = color;
+                ctx.font = 'bold 24px "Plus Jakarta Sans", sans-serif';
+                ctx.textBaseline = 'middle';
+                [...code].forEach((ch, i) => {
+                    ctx.save();
+                    ctx.translate(18 + i * 26, canvas.height / 2 + (randomInt(9) - 4));
+                    ctx.rotate((randomInt(41) - 20) * Math.PI / 180);
+                    ctx.fillText(ch, -8, 0);
+                    ctx.restore();
+                });
+                input.value = '';
+            }
+
+            document.getElementById('captcha-refresh').addEventListener('click', drawCaptcha);
+            form.addEventListener('submit', (e) => {
+                if (input.value.trim().toUpperCase() !== code) {
+                    e.preventDefault();
+                    error.classList.remove('hidden');
+                    drawCaptcha();
+                    input.focus();
+                } else {
+                    error.classList.add('hidden');
+                }
+            });
+            drawCaptcha();
+        })();
     </script>
 </body>
 </html>
